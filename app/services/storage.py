@@ -1,0 +1,4 @@
+DOCUMENT_STORE = {}
+
+print("STORAGE LOADED")
+print(id(DOCUMENT_STORE))
