@@ -7,7 +7,10 @@ import subprocess
 import numpy as np
 import cv2
 
-pytesseract.pytesseract.tesseract_cmd = (r"D:\tesseract\tesseract.exe")
+if os.name == "nt":
+    pytesseract.pytesseract.tesseract_cmd = (
+        r"D:\tesseract\tesseract.exe"
+    )
 
 
 async def extract_text_from_image(file: UploadFile) -> str:
