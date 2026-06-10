@@ -2,6 +2,14 @@
 
 # AI Research Assistant
 
+## Live Demo
+
+https://ai-research-assistant-8g5s.onrender.com/
+
+## API Documentation
+
+https://ai-research-assistant-8g5s.onrender.com/docs
+
 ## Problem Statement
 
 Researchers, product managers, engineers, and business teams often need to search through large collections of documentation, PDFs, reports, technical references, and research material.
@@ -22,6 +30,8 @@ The system supports:
 * Source attribution
 
 The goal is to improve information retrieval accuracy while reducing the time required to manually search large document collections.
+
+
 
 
 ## LLM Pricing Evaluation (June 2026)
@@ -191,20 +201,23 @@ These characteristics make it an appropriate choice for an AI Research Assistant
 
 ## Final Platform Recommendation
 
-After evaluating Google Gemini, Anthropic Claude, and OpenAI GPT platforms across pricing, context handling, multimodal capabilities, scalability, integration complexity, and enterprise readiness, Google Gemini 2.5 Flash was selected as the primary model for this AI Research Assistant prototype.Gemini 2.5 Flash provides the strongest balance between capability, scalability, and cost efficiency.
+Three major AI providers were evaluated: OpenAI, Gemini, and Claude.
 
-Key reasons include:
+For this prototype, Gemini Embeddings were selected for semantic search because of their strong retrieval quality and generous free-tier availability.
 
-* Lowest operating cost among evaluated frontier models.
-* Native support for PDF, image, audio, and video inputs.
-* Large context window exceeding 1 million tokens.
-* Strong suitability for Retrieval-Augmented Generation (RAG) workloads.
-* Native embedding models and multimodal processing capabilities.
-* Mature Python SDK and cloud deployment ecosystem.
+Groq was selected for response generation due to its extremely low latency and zero-cost experimentation during development.
+
+For a production-scale AI Research Assistant handling large document collections and long-context reasoning, Gemini 2.5 Flash would be the recommended primary model because of its large context window and multimodal capabilities.
+
+Therefore:
+
+* Prototype: Gemini Embeddings + Groq LLM
+* Production Recommendation: Gemini 2.5 Flash + Vector Database
+
 
 Claude Sonnet 4.6 remains an excellent alternative for advanced reasoning and enterprise security requirements, while OpenAI GPT-5.4 provides a strong ecosystem for structured outputs, tool use, and agentic workflows.
 
-For the objectives of this prototype—document ingestion, OCR processing, semantic search, and grounded question answering—Gemini 2.5 Flash provides the most balanced combination of capability, scalability, and cost efficiency.
+For the objectives of this prototype—document ingestion, OCR processing, semantic search, and grounded question answering—Gemini 2.5 Flash and Groq was selected for most balanced combination of capability, scalability, and cost efficiency.
 
 
 ## Research Sources
@@ -219,15 +232,72 @@ For the objectives of this prototype—document ingestion, OCR processing, seman
 All pricing, context window, capability, and platform comparisons were verified using official vendor documentation as of June 2026.
 
 
+## Architecture Diagram
+
+![Architecture](AI-Assistant_workflow.drawio.png)
+
+
+# AI Research Assistant
+
+## Live Demo
+
+https://ai-research-assistant-8g5s.onrender.com/
+
+---
+
+## Features
+
+- PDF Upload
+- Image OCR
+- Semantic Search
+- RAG Question Answering
+- Source Attribution
+- FastAPI Backend
+- Groq LLM
+- Gemini Embeddings
+
+---
+
+## API Endpoints
+
+POST /documents/upload
+
+POST /documents/{id}/process
+
+POST /documents/ocr
+
+POST /search
+
+POST /rag
+
+GET /documents
+
+GET /documents/{id}
+
+---
+
+## Example Workflow
+
+1. Upload PDF
+2. Process Document
+3. Generate Embeddings
+4. Search Relevant Chunks
+5. Ask Question
+6. Receive Grounded Answer
+
+
+
 ## Tool Selection Rationale
 
-| Component | Selected Tool | Reason |
-|------------|--------------|---------|
-| LLM | Gemini 2.5 Flash | Lowest cost and strong multimodal support |
-| Backend Framework | FastAPI | Async architecture and automatic validation |
-| Vector Database | PostgreSQL + pgvector | Open-source, scalable, and integrates vector search with relational data |
-| Embedding Model | Gemini Embeddings | Native ecosystem integration |
-| OCR | Tesseract OCR | Open-source and easy to integrate |
+| Component                       | Selected Tool               | Reason                                      |
+| ------------------------------- | --------------------------- | ------------------------------------------- |
+| LLM (Prototype)                 | Groq (Llama 3.1 8B Instant) | Fast inference and free for experimentation |
+| LLM (Production Recommendation) | Gemini 2.5 Flash            | Large context window and multimodal support |
+| Backend Framework               | FastAPI                     | Async architecture and automatic validation |
+| Vector Storage (Prototype)      | In-Memory Dictionary        | Simple implementation for proof-of-concept  |
+| Vector Database (Production)    | PostgreSQL + pgvector       | Scalable semantic search and persistence    |
+| Embedding Model                 | Gemini Embeddings           | High-quality semantic embeddings            |
+| OCR                             | Tesseract OCR               | Open-source and easy to integrate           |
 
 
 ## Architecture & Tool Selection
@@ -262,4 +332,7 @@ Additionally, FastAPI's native Pydantic integration provides automatic request v
 ### Recommendation
 
 FastAPI is the preferred backend framework for this prototype due to its strong performance, asynchronous architecture, automatic validation, and suitability for AI-powered applications.
+
+
+
 
