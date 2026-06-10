@@ -1,5 +1,8 @@
+import uuid
 from fastapi import APIRouter, UploadFile, File
 from app.services.storage import DOCUMENT_STORE
+from app.services.chunk_service import chunk_text
+from app.services.embeddings import generate_embedding
 from app.services.ocr_service import (extract_text_from_image)
 from app.services.document_service import (
     save_document,
@@ -64,11 +67,44 @@ async def ocr_document(
     file: UploadFile = File(...)
 ):
 
-    text = await extract_text_from_image(
-        file
+    text = await extract_text_from_image(file)
+
+    chunks = chunk_text(text)
+
+    embeddings = []
+
+    for chunk in chunks:
+
+        embedding = await generate_embedding(
+            chunk
+        )
+
+        embeddings.append(
+            embedding
+        )
+
+    document_id = str(
+        uuid.uuid4()
     )
 
-    return {
+    DOCUMENT_STORE[document_id] = {
+
         "text": text,
-        "text_length": len(text)
+
+        "chunks": chunks,
+
+        "embeddings": embeddings,
+
+        "source": "ocr"
+    }
+
+    return {
+
+        "document_id": document_id,
+
+        "source": "ocr",
+
+        "text_length": len(text),
+
+        "chunks": len(chunks)
     }
