@@ -38,6 +38,7 @@ async def get_documents():
 
         results.append({
             "document_id": document_id,
+            "source": data.get("source", "pdf"),
             "chunks": len(data.get("chunks", [])),
             "text_length": len(data.get("text", ""))
         })
