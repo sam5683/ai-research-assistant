@@ -30,6 +30,24 @@ def cosine_similarity(
     
     return dot_product / (magnitude_a * magnitude_b)
 
+STOP_WORDS = {
+    "what",
+    "is",
+    "the",
+    "a",
+    "an",
+    "of",
+    "in",
+    "to",
+    "for",
+    "and",
+    "with",
+    "who",
+    "where",
+    "when",
+    "why",
+    "how"
+}
 
 async def retrieve_relevant_chunks(
     query: str,
@@ -48,6 +66,12 @@ async def retrieve_relevant_chunks(
         return []
 
     query_embedding = await generate_embedding(query)
+
+    query_words = {
+        word.lower()
+        for word in query.split()
+        if word.lower() not in STOP_WORDS
+    }
 
     scored_chunks = []
 
@@ -72,30 +96,46 @@ async def retrieve_relevant_chunks(
                 embedding
             )
 
+            text_words = {
+                word.lower().strip(".,:;!?")
+                for word in chunk.split()
+            }
+
+            keyword_matches = len(
+                query_words.intersection(text_words)
+            )
+
+            final_score = (
+                similarity +
+                (keyword_matches * 0.15)
+            )
+
             scored_chunks.append({
                 "document_id": document_id,
                 "chunk": chunk,
-                "similarity": similarity
+                "similarity": similarity,
+                "score": final_score
             })
 
     scored_chunks.sort(
-        key=lambda x: x["similarity"],
+        key=lambda x: x["score"],
         reverse=True
     )
 
     print("\nTOP RESULTS:")
 
-    for item in scored_chunks[:3]:
+    for item in scored_chunks[:top_k]:
 
         print(
-            item["similarity"],
-            item["chunk"][:80]
+            f"SCORE={item['score']:.4f} "
+            f"SIM={item['similarity']:.4f}"
         )
+
+        print(item["chunk"][:120])
 
     print("===========================\n")
 
     return scored_chunks[:top_k]
-
 async def generate_rag_answer(
     question: str,
     top_k: int = 3
@@ -118,7 +158,16 @@ async def generate_rag_answer(
     )
 
     prompt = f"""
-Based on the following context, answer the question.
+You are an AI Research Assistant.
+
+Answer ONLY from the provided context.
+
+Rules:
+- Do not invent information.
+- If the answer is not present in the context, say:
+  "The uploaded documents do not contain enough information to answer this question."
+- Prefer exact definitions when available.
+- Keep answers concise and factual.
 
 Context:
 {context}
@@ -132,25 +181,25 @@ Answer:
     answer = await call_llm(
         prompt=prompt,
         system_prompt="""
-You are a RAG assistant.
+You are a retrieval-augmented assistant.
 
-Answer ONLY using the provided context.
+Use ONLY the supplied context.
 
-If the answer is not present in the context,
-say that the information was not found.
-
-Do not hallucinate.
+Never hallucinate.
+Never use outside knowledge.
 """,
-        temperature=0.2
+        temperature=0.1
     )
 
     if not answer:
         answer = "Failed to generate response."
 
-    sources = [
-        chunk["document_id"]
-        for chunk in retrieved_chunks
-    ]
+    sources = list(
+        set(
+            chunk["document_id"]
+            for chunk in retrieved_chunks
+        )
+    )
 
     return {
         "answer": answer,
